@@ -1,6 +1,7 @@
 package com.shalimov.springsecurity.security;
 
 import io.jsonwebtoken.*;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,14 +19,15 @@ import java.util.Date;
 public class JwtTokenProvider {
 
     private final UserDetailsService userDetailsService;
+
     @Value("${jwt.secret}")
     private String secretKey;
-    @Value("${jwt.expiration}")
-    private long validityInMilliseconds;
     @Value("${jwt.header}")
     private String authorizationHeader;
+    @Value("${jwt.expiration}")
+    private long validityInMilliseconds;
 
-    public JwtTokenProvider(UserDetailsService userDetailsService) {
+    public JwtTokenProvider(@Qualifier("userDetailsServiceImpl") UserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
 
@@ -34,7 +36,7 @@ public class JwtTokenProvider {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
 
-    public String creatToken(String username, String role) {
+    public String createToken(String username, String role) {
         Claims claims = Jwts.claims().setSubject(username);
         claims.put("role", role);
         Date now = new Date();
@@ -57,16 +59,18 @@ public class JwtTokenProvider {
         }
     }
 
-    public Authentication getAuthentication(String token){
-        UserDetails userDetails = this.userDetailsService.loadUserByUsername(getUserName(token));
-        return new UsernamePasswordAuthenticationToken(userDetails,"",userDetails.getAuthorities());
+    public Authentication getAuthentication(String token) {
+        UserDetails userDetails = this.userDetailsService.loadUserByUsername(getUsername(token));
+        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
-    public String getUserName(String token){
+    public String getUsername(String token) {
         return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
     }
 
-    public String resolveToken (HttpServletRequest request){
+    public String resolveToken(HttpServletRequest request) {
         return request.getHeader(authorizationHeader);
     }
+
+
 }

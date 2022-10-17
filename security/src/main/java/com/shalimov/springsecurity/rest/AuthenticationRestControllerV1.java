@@ -39,7 +39,7 @@ public class AuthenticationRestControllerV1 {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(),request.getPassword()));
             User user = userRepository.findByEmail(request.getEmail()).orElseThrow(()-> new UsernameNotFoundException("User doesn't exist"));
-            String token = jwtTokenProvider.creatToken(request.getEmail(),user.getRole().name());
+            String token = jwtTokenProvider.createToken(request.getEmail(),user.getRole().name());
             Map<Object,Object> response = new HashMap<>();
             response.put("email",request.getEmail());
             response.put("token", token);
@@ -48,7 +48,7 @@ public class AuthenticationRestControllerV1 {
             return new ResponseEntity<>("Invalid email/password combination", HttpStatus.FORBIDDEN);
         }
     }
-@PostMapping("logout")
+    @PostMapping("/logout")
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         SecurityContextLogoutHandler securityContextLogoutHandler = new SecurityContextLogoutHandler();
         securityContextLogoutHandler.logout(request, response, null);
